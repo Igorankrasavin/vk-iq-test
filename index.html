@@ -302,6 +302,13 @@
             color: #9ca3af;
             text-align: center;
         }
+
+        .developer {
+            margin-top: 6px;
+            font-size: 11px;
+            color: #9ca3af;
+            text-align: center;
+        }
     </style>
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
 </head>
@@ -398,6 +405,9 @@
 
     <div class="footer">
         Независимое мини-приложение VK Mini Apps. Без привязки к сообществам и сторонним темам.
+        <div class="developer">
+            Разработчик: Игорь Юрьевич Красавин
+        </div>
     </div>
 </div>
 
@@ -620,8 +630,6 @@
             answers: ["6", "7", "8", "9"],
             correctIndex: 1
         },
-
-        // +10
         {
             text: "В последовательности: 2, 4, 7, 11, 16, ... какое число будет следующим?",
             hint: "Разница между соседними числами увеличивается на 1.",
@@ -692,8 +700,6 @@
             answers: ["●", "○", "■", "▲"],
             correctIndex: 0
         },
-
-        // ещё +10 (до 30)
         {
             text: "Какое число продолжит ряд: 4, 6, 9, 13, 18, ... ?",
             hint: "Разница между числами: +2, +3, +4, +5...",
@@ -769,8 +775,6 @@
             answers: ["◯", "■", "▲", "◆"],
             correctIndex: 0
         },
-
-        // финальные +5 (до 35)
         {
             text: "Какое число продолжит ряд: 6, 9, 13, 18, 24, ... ?",
             hint: "Разница: +3, +4, +5, +6...",
@@ -870,8 +874,6 @@
             answers: ["Совершенное", "Простое", "Составное", "Рациональное"],
             correctIndex: 1
         },
-
-        // +10
         {
             text: "Какое число продолжит ряд: 1, 2, 4, 7, 11, 16, ... ?",
             hint: "Разница: 1, 2, 3, 4, ...",
@@ -920,13 +922,13 @@
         },
         {
             text: "Какое число продолжит ряд: 4, 11, 25, 53, ... ?",
-            hint: "Посмотри на удвоение и +3, +3, +3...",
+            hint: "Посмотри на умножение и +3.",
             answers: ["107", "109", "111", "113"],
             correctIndex: 1
         },
         {
             text: "Есть три утверждения: 1) Все X — Y. 2) Некоторые Y — Z. 3) Некоторые X — не Z. Какое из них может быть лишним, если первые два верны?",
-            hint: "Если первые верны, то третье может как подходить, так и нет.",
+            hint: "Если первые верны, то третье не следует автоматически.",
             answers: [
                 "Первое",
                 "Второе",
@@ -947,8 +949,6 @@
             answers: ["I4", "I5", "H5", "J5"],
             correctIndex: 1
         },
-
-        // ещё +10 (до 30)
         {
             text: "Какое число продолжит ряд: 2, 5, 11, 23, 47, ... ?",
             hint: "Умножение на 2 и +1.",
@@ -1019,8 +1019,6 @@
             answers: ["J5", "J6", "I6", "K6"],
             correctIndex: 1
         },
-
-        // финальные +15 (до 45)
         {
             text: "Какое число продолжит ряд: 3, 8, 15, 24, 35, ... ?",
             hint: "Разница: +5, +7, +9, +11...",
@@ -1179,7 +1177,7 @@
             if (isNaN(n) || n < 0) return 0;
             return n;
         } catch (e) {
-            alert('Load attempts error: ' + e.message);
+            console.log('Load attempts error:', e);
             return 0;
         }
     }
@@ -1188,7 +1186,7 @@
         try {
             localStorage.setItem(ATTEMPTS_KEY, String(n));
         } catch (e) {
-            alert('Save attempts error: ' + e.message);
+            console.log('Save attempts error:', e);
         }
     }
 
@@ -1207,7 +1205,7 @@
                 '</strong> (' + data.percent + '%) — ' + data.label +
                 '.<br><span style="opacity:0.9;">Можно пройти ещё раз и посмотреть, изменится ли настроение и темп мышления.</span>';
         } catch (e) {
-            alert('Load last result error: ' + e.message);
+            console.log('Load last result error:', e);
         }
     }
 
@@ -1216,7 +1214,7 @@
             const payload = { score, total, percent, label, level: currentLevel, ts: Date.now() };
             localStorage.setItem(LAST_RESULT_KEY, JSON.stringify(payload));
         } catch (e) {
-            alert('Save last result error: ' + e.message);
+            console.log('Save last result error:', e);
         }
     }
 
@@ -1224,7 +1222,7 @@
         try {
             localStorage.setItem(EASY_COMPLETED_KEY, '1');
         } catch (e) {
-            alert('Mark easy error: ' + e.message);
+            console.log('Mark easy error:', e);
         }
     }
 
@@ -1361,6 +1359,10 @@
         if (currentIndex > 0) {
             currentIndex--;
             renderQuestion();
+        } else {
+            // если это первый вопрос, возвращаемся на экран выбора уровней
+            quizScreen.style.display = 'none';
+            welcomeScreen.style.display = 'block';
         }
     });
 
@@ -1398,7 +1400,7 @@
         }
     });
 
-    // ---------------- VK BRIDGE + РЕКЛАМА С ДИАГНОСТИКОЙ ----------------
+    // ---------------- VK BRIDGE + РЕКЛАМА (БЕЗ ALERT) ----------------
 
     let vkBridgeReady = false;
     let bannerEverTried = false;
@@ -1409,25 +1411,24 @@
         vkBridge.send('VKWebAppInit')
             .then(function () {
                 vkBridgeReady = true;
-                alert('VKWebAppInit: OK');
-                // Пробуем показать стартовый баннер один раз
-                showBannerWithAlerts('bottom', 'init');
+                console.log('VKWebAppInit: OK');
+                showBannerSilently('bottom', 'init');
             })
             .catch(function (error) {
-                alert('VKWebAppInit ERROR: ' + JSON.stringify(error));
+                console.log('VKWebAppInit ERROR:', error);
             });
     } else {
-        alert('vkBridge не найден в окне. Приложение не запущено как VK Mini App?');
+        console.log('vkBridge not found. Not running inside VK Mini Apps?');
     }
 
-    function showBannerWithAlerts(location, reason) {
+    function showBannerSilently(location, reason) {
         if (!vkBridgeReady) {
-            alert('Баннер не вызван: vkBridge ещё не готов. Причина: ' + reason);
+            console.log('Banner not called: bridge not ready. Reason:', reason);
             return;
         }
 
         if (bannerShownOnce) {
-            alert('Баннер уже успешно показывали раньше в этой сессии. Повторный показ не запрашиваем. Причина: ' + reason);
+            console.log('Banner already shown once. Skip. Reason:', reason);
             return;
         }
 
@@ -1438,31 +1439,33 @@
             layout_type: 'resize',
             can_close: true
         }).then(function (data) {
-            alert('VKWebAppShowBannerAd SUCCESS (' + reason + '): ' + JSON.stringify(data));
+            console.log('VKWebAppShowBannerAd SUCCESS (' + reason + '):', data);
             if (data && data.result) {
                 bannerShownOnce = true;
             } else {
-                alert('Ответ без result=true. Скорее всего, креатива нет или баннер не показан.');
+                console.log('Banner response without result=true — probably no creative or not shown.');
             }
         }).catch(function (error) {
-            alert('VKWebAppShowBannerAd ERROR (' + reason + '): ' + JSON.stringify(error));
+            console.log('VKWebAppShowBannerAd ERROR (' + reason + '):', error);
         });
     }
 
+    // Перезапуск теста через rewarded-рекламу и возврат на выбор уровней
     restartBtn.addEventListener('click', () => {
         const attempts = loadAttempts();
 
-        if (!vkBridgeReady || attempts <= 1) {
-            currentIndex = 0;
-            answersState = new Array(currentQuestions.length).fill(null);
+        function goToLevelSelect() {
             resultScreen.style.display = 'none';
-            quizScreen.style.display = 'block';
-            renderQuestion();
+            welcomeScreen.style.display = 'block';
+        }
+
+        if (!vkBridgeReady || attempts <= 1) {
+            goToLevelSelect();
             return;
         }
 
         if (rewardCheckInProgress) {
-            alert('Ждём завершения предыдущего запроса рекламы.');
+            console.log('Waiting for previous reward ad call to finish.');
             return;
         }
 
@@ -1472,25 +1475,23 @@
             ad_format: 'reward'
         }).then(function (data) {
             rewardCheckInProgress = false;
-            alert('VKWebAppShowNativeAds (reward) RESULT: ' + JSON.stringify(data));
+            console.log('VKWebAppShowNativeAds (reward) RESULT:', data);
             if (data && data.result) {
-                currentIndex = 0;
-                answersState = new Array(currentQuestions.length).fill(null);
-                resultScreen.style.display = 'none';
-                quizScreen.style.display = 'block';
-                renderQuestion();
+                goToLevelSelect();
             } else {
-                alert('Реклама не показана (result != true). Возможно, нет креативов для этого формата.');
+                console.log('Reward ad not shown (result != true). Probably no creatives.');
+                goToLevelSelect();
             }
         }).catch(function (error) {
             rewardCheckInProgress = false;
-            alert('VKWebAppShowNativeAds ERROR: ' + JSON.stringify(error));
+            console.log('VKWebAppShowNativeAds ERROR:', error);
+            goToLevelSelect();
         });
     });
 
     startBtn.addEventListener('click', () => {
         if (vkBridgeReady && currentLevel !== 'easy' && isEasyCompleted()) {
-            showBannerWithAlerts('top', 'start_level_' + currentLevel);
+            showBannerSilently('top', 'start_level_' + currentLevel);
         }
 
         welcomeScreen.style.display = 'none';
