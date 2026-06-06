@@ -191,15 +191,22 @@
             font-size: 14px;
             text-align: center;
             color: #9ca3af;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
 
         .result-text {
             font-size: 13px;
             color: #d1d5db;
             line-height: 1.5;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             text-align: left;
+        }
+
+        .result-meta {
+            font-size: 12px;
+            color: #9ca3af;
+            text-align: center;
+            margin-bottom: 10px;
         }
 
         .note {
@@ -221,7 +228,6 @@
             text-decoration: none;
         }
 
-        /* Экран приветствия */
         .welcome-title {
             font-size: 21px;
             font-weight: 800;
@@ -328,6 +334,7 @@
         <div class="result-title">Результат</div>
         <div class="result-score" id="resultScore"></div>
         <div class="result-label" id="resultLabel"></div>
+        <div class="result-meta" id="resultMeta"></div>
         <div class="result-text" id="resultText"></div>
 
         <button class="nav-btn primary" id="restartBtn" style="margin-top: 6px;">
@@ -345,14 +352,13 @@
 </div>
 
 <script>
-    // Инициализация VK Bridge и баннера
+    // Инициализация VK Bridge и баннер
     let vkBridgeReady = false;
 
     if (window.vkBridge) {
         vkBridge.send('VKWebAppInit')
             .then(function () {
                 vkBridgeReady = true;
-                // Пытаемся показать баннер внизу, если доступен
                 vkBridge.send('VKWebAppShowBannerAd', {
                     banner_location: 'bottom'
                 }).then(function (data) {
@@ -366,256 +372,7 @@
             });
     }
 
-    // Массив вопросов
     const questions = [
         {
             text: "Какое число продолжит ряд: 2, 4, 8, 16, ... ?",
-            hint: "Каждый следующий элемент связан с предыдущим.",
-            answers: ["18", "24", "32", "30"],
-            correctIndex: 2
-        },
-        {
-            text: "Все вороны чёрные. На дереве сидит птица, и она не чёрная. Можно ли точно сказать, что это не ворона?",
-            hint: "Подумаем про «все» и «одна».",
-            answers: ["Да, точно не ворона", "Нет, нельзя быть уверенным", "Это точно ворона", "Тут не хватает данных"],
-            correctIndex: 1
-        },
-        {
-            text: "Какое число лишнее в последовательности: 7, 14, 21, 28, 36, 42?",
-            hint: "Посмотри на шаг между числами.",
-            answers: ["14", "28", "36", "42"],
-            correctIndex: 2
-        },
-        {
-            text: "У Пети три сестры. У каждой сестры один брат. Сколько всего детей в семье?",
-            hint: "Сёстры делят одного и того же брата.",
-            answers: ["4", "5", "6", "7"],
-            correctIndex: 1
-        },
-        {
-            text: "Какое слово получится, если буквы С, Л, О, Н расположить в алфавитном порядке?",
-            hint: "А, Б, В... Расположи по порядку.",
-            answers: ["ЛОСН", "НОЛС", "ЛСНО", "ЛНОС"],
-            correctIndex: 3
-        },
-        {
-            text: "Квадратное поле разбито на 16 маленьких квадратов. Сколько маленьких квадратов по одной стороне?",
-            hint: "16 = ? × ?",
-            answers: ["3", "4", "5", "8"],
-            correctIndex: 1
-        },
-        {
-            text: "Если сегодня среда, то какой день недели будет через 9 дней?",
-            hint: "Через 7 дней возвращаемся в тот же день.",
-            answers: ["Пятница", "Суббота", "Понедельник", "Пятница через неделю"],
-            correctIndex: 0
-        },
-        {
-            text: "Часовая стрелка прошла от 3 до 9. На какой угол (в градусах) она повернулась?",
-            hint: "Полный круг — 360°. Часов — 12.",
-            answers: ["90°", "120°", "150°", "180°"],
-            correctIndex: 3
-        },
-        {
-            text: "Условие: все A — B. Некоторые B — C. Можно ли точно сказать, что некоторые A — C?",
-            hint: "Попробуй представить круги пересечений.",
-            answers: ["Да, всегда", "Нет, не обязательно", "Да, если B мало", "Да, если C много"],
-            correctIndex: 1
-        },
-        {
-            text: "Сколько различных перестановок букв в слове КИТ?",
-            hint: "Три буквы, все разные.",
-            answers: ["3", "4", "5", "6"],
-            correctIndex: 3
-        }
-    ];
-
-    let currentIndex = 0;
-    let answersState = new Array(questions.length).fill(null);
-
-    const welcomeScreen = document.getElementById('welcomeScreen');
-    const lastResultBox = document.getElementById('lastResultBox');
-    const startBtn = document.getElementById('startBtn');
-
-    const quizScreen = document.getElementById('quizScreen');
-    const resultScreen = document.getElementById('resultScreen');
-
-    const questionCounter = document.getElementById('questionCounter');
-    const progressBar = document.getElementById('progressBar');
-    const questionText = document.getElementById('questionText');
-    const questionHint = document.getElementById('questionHint');
-    const answersContainer = document.getElementById('answersContainer');
-
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const tempBadge = document.getElementById('tempBadge');
-
-    const resultScore = document.getElementById('resultScore');
-    const resultLabel = document.getElementById('resultLabel');
-    const resultText = document.getElementById('resultText');
-    const restartBtn = document.getElementById('restartBtn');
-
-    const LAST_RESULT_KEY = 'vk_iq_test_last_result';
-
-    function loadLastResult() {
-        try {
-            const raw = localStorage.getItem(LAST_RESULT_KEY);
-            if (!raw) return;
-
-            const data = JSON.parse(raw);
-            if (!data || typeof data.percent !== 'number') return;
-
-            lastResultBox.style.display = 'block';
-            lastResultBox.innerHTML =
-                'Последний результат на этом устройстве: <strong>' +
-                data.score + ' / ' + data.total +
-                '</strong> (' + data.percent + '%) — ' + data.label +
-                '.<br><span style="opacity:0.9;">Можно пройти ещё раз и посмотреть, изменится ли настроение и темп мышления.</span>';
-        } catch (e) {
-            console.log('Load last result error', e);
-        }
-    }
-
-    function saveLastResult(score, total, percent, label) {
-        try {
-            const payload = { score, total, percent, label, ts: Date.now() };
-            localStorage.setItem(LAST_RESULT_KEY, JSON.stringify(payload));
-        } catch (e) {
-            console.log('Save last result error', e);
-        }
-    }
-
-    function renderQuestion() {
-        const q = questions[currentIndex];
-
-        questionCounter.textContent = `Вопрос ${currentIndex + 1} из ${questions.length}`;
-        progressBar.style.width = ((currentIndex) / questions.length * 100) + '%';
-
-        questionText.textContent = q.text;
-        questionHint.textContent = q.hint;
-
-        answersContainer.innerHTML = '';
-        q.answers.forEach((ans, idx) => {
-            const btn = document.createElement('button');
-            btn.className = 'answer-btn';
-            btn.textContent = ans;
-
-            if (answersState[currentIndex] === idx) {
-                btn.classList.add('selected');
-            }
-
-            btn.addEventListener('click', () => {
-                answersState[currentIndex] = idx;
-                renderQuestion();
-                updateNextButtonState();
-            });
-
-            answersContainer.appendChild(btn);
-        });
-
-        prevBtn.disabled = currentIndex === 0;
-        updateNextButtonState();
-
-        if (currentIndex < 3) {
-            tempBadge.textContent = 'Режим: разминка';
-        } else if (currentIndex < 7) {
-            tempBadge.textContent = 'Режим: основная часть';
-        } else {
-            tempBadge.textContent = 'Режим: финишный рывок';
-        }
-    }
-
-    function updateNextButtonState() {
-        const hasAnswer = answersState[currentIndex] !== null;
-        if (currentIndex === questions.length - 1) {
-            nextBtn.textContent = 'Показать результат';
-        } else {
-            nextBtn.textContent = 'Дальше';
-        }
-        nextBtn.disabled = !hasAnswer;
-    }
-
-    function calculateScore() {
-        let correctCount = 0;
-        questions.forEach((q, idx) => {
-            if (answersState[idx] === q.correctIndex) {
-                correctCount++;
-            }
-        });
-        return correctCount;
-    }
-
-    function getResultDescription(score) {
-        const total = questions.length;
-        const percent = Math.round(score / total * 100);
-
-        let label;
-        let text;
-
-        if (percent <= 40) {
-            label = "Наблюдатель в разминке";
-            text = "Ты уже делаешь важное — обращаешь внимание на свои мысли и реакции. Мозг отлично тренируется маленькими шагами. Можно пройти тест ещё раз позже и посмотреть, как меняется результат.";
-        } else if (percent <= 70) {
-            label = "Внимательный аналитик";
-            text = "У тебя хорошо развита базовая логика и умение замечать закономерности. Если добавить немного терпения к условиям задач, результат может стать ещё выше.";
-        } else {
-            label = "Интуитивный стратег";
-            text = "Ты быстро ориентируешься в логических задачах и любишь искать структуру в хаосе. Этот тест — только малая часть того, что умеет твой мозг. Главное — применять это в реальной жизни, а не только в головоломках.";
-        }
-
-        return { percent, label, text };
-    }
-
-    // Навигация
-    prevBtn.addEventListener('click', () => {
-        if (currentIndex > 0) {
-            currentIndex--;
-            renderQuestion();
-        }
-    });
-
-    nextBtn.addEventListener('click', () => {
-        if (currentIndex < questions.length - 1) {
-            currentIndex++;
-            renderQuestion();
-        } else {
-            const score = calculateScore();
-            const total = questions.length;
-            const { percent, label, text } = getResultDescription(score);
-
-            resultScore.textContent = `${score} / ${total}`;
-            resultLabel.textContent = `${label} (${percent}%)`;
-            resultText.textContent = text;
-
-            progressBar.style.width = '100%';
-
-            // Сохраняем результат в localStorage
-            saveLastResult(score, total, percent, label);
-
-            quizScreen.style.display = 'none';
-            resultScreen.style.display = 'block';
-        }
-    });
-
-    restartBtn.addEventListener('click', () => {
-        currentIndex = 0;
-        answersState = new Array(questions.length).fill(null);
-        resultScreen.style.display = 'none';
-        quizScreen.style.display = 'block';
-        renderQuestion();
-    });
-
-    // Старт: экран приветствия
-    startBtn.addEventListener('click', () => {
-        welcomeScreen.style.display = 'none';
-        quizScreen.style.display = 'block';
-        currentIndex = 0;
-        answersState = new Array(questions.length).fill(null);
-        renderQuestion();
-    });
-
-    // При загрузке страницы пытаемся показать последний результат
-    loadLastResult();
-</script>
-</body>
-</html>
+            hint: "Каждый следующий 
