@@ -223,9 +223,11 @@
             text-align: center;
         }
 
-        .footer a {
-            color: #93c5fd;
-            text-decoration: none;
+        .developer {
+            margin-top: 6px;
+            font-size: 11px;
+            color: #9ca3af;
+            text-align: center;
         }
 
         .welcome-title {
@@ -302,13 +304,6 @@
             color: #9ca3af;
             text-align: center;
         }
-
-        .developer {
-            margin-top: 6px;
-            font-size: 11px;
-            color: #9ca3af;
-            text-align: center;
-        }
     </style>
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
 </head>
@@ -346,7 +341,7 @@
         </button>
 
         <div class="note" style="margin-top: 10px;">
-            Формат развлекательный, без привязки к каким‑либо сообществам и темам.
+            Формат развлекательный, не является официальным тестом IQ или диагностикой.
         </div>
         <div class="ad-strip">
             В приложении может отображаться реклама ВКонтакте. Мы используем её, чтобы тест оставался бесплатным.
@@ -404,7 +399,6 @@
     </div>
 
     <div class="footer">
-        Независимое мини-приложение VK Mini Apps. Без привязки к сообществам и сторонним темам.
         <div class="developer">
             Разработчик: Игорь Юрьевич Красавин
         </div>
@@ -414,9 +408,7 @@
 <script>
     // ---------------- ВОПРОСЫ ----------------
 
-    // ЛЁГКИЙ УРОВЕНЬ — 20 вопросов
     const easyQuestions = [
-        // ЧИСЛА
         {
             text: "Какое число продолжит ряд: 2, 4, 8, 16, ... ?",
             hint: "Каждый следующий элемент связан с предыдущим.",
@@ -465,8 +457,6 @@
             answers: ["13", "16", "10", "11"],
             correctIndex: 0
         },
-
-        // ЛОГИКА
         {
             text: "У Пети три сестры. У каждой сестры один брат. Сколько всего детей в семье?",
             hint: "Сёстры делят одного и того же брата.",
@@ -552,8 +542,6 @@
             answers: ["5", "6", "7", "8"],
             correctIndex: 1
         },
-
-        // СИМВОЛЫ
         {
             text: "Последовательность фигур: ◼, ◻, ◼, ◻, ... Какой символ должен быть следующим?",
             hint: "Фигуры чередуются: заполненный, пустой, заполненный…",
@@ -568,7 +556,6 @@
         }
     ];
 
-    // СРЕДНИЙ УРОВЕНЬ — 35 вопросов
     const mediumQuestions = [
         {
             text: "Все вороны чёрные. На дереве сидит птица, и она не чёрная. Можно ли точно сказать, что это не ворона?",
@@ -702,7 +689,7 @@
         },
         {
             text: "Какое число продолжит ряд: 4, 6, 9, 13, 18, ... ?",
-            hint: "Разница между числами: +2, +3, +4, +5...",
+            hint: "Разница: +2, +3, +4, +5...",
             answers: ["22", "23", "24", "25"],
             correctIndex: 1
         },
@@ -812,7 +799,6 @@
         }
     ];
 
-    // СЛОЖНЫЙ УРОВЕНЬ — 45 вопросов
     const hardQuestions = [
         {
             text: "Числа 2, 3, 5, 7, 11, 13 — это:",
@@ -1360,7 +1346,6 @@
             currentIndex--;
             renderQuestion();
         } else {
-            // если это первый вопрос, возвращаемся на экран выбора уровней
             quizScreen.style.display = 'none';
             welcomeScreen.style.display = 'block';
         }
@@ -1400,7 +1385,7 @@
         }
     });
 
-    // ---------------- VK BRIDGE + РЕКЛАМА (БЕЗ ALERT) ----------------
+    // ---------------- VK BRIDGE + РЕКЛАМА ----------------
 
     let vkBridgeReady = false;
     let bannerEverTried = false;
@@ -1450,7 +1435,6 @@
         });
     }
 
-    // Перезапуск теста через rewarded-рекламу и возврат на выбор уровней
     restartBtn.addEventListener('click', () => {
         const attempts = loadAttempts();
 
@@ -1476,12 +1460,7 @@
         }).then(function (data) {
             rewardCheckInProgress = false;
             console.log('VKWebAppShowNativeAds (reward) RESULT:', data);
-            if (data && data.result) {
-                goToLevelSelect();
-            } else {
-                console.log('Reward ad not shown (result != true). Probably no creatives.');
-                goToLevelSelect();
-            }
+            goToLevelSelect();
         }).catch(function (error) {
             rewardCheckInProgress = false;
             console.log('VKWebAppShowNativeAds ERROR:', error);
