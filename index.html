@@ -402,26 +402,9 @@
 </div>
 
 <script>
-    let vkBridgeReady = false;
+    // ---------------- ВОПРОСЫ ----------------
 
-    if (window.vkBridge) {
-        vkBridge.send('VKWebAppInit')
-            .then(function () {
-                vkBridgeReady = true;
-                vkBridge.send('VKWebAppShowBannerAd', {
-                    banner_location: 'bottom'
-                }).then(function (data) {
-                    console.log('Banner result', data);
-                }).catch(function (error) {
-                    console.log('Banner error', error);
-                });
-            })
-            .catch(function (error) {
-                console.log('VKWebAppInit error', error);
-            });
-    }
-
-    // ЛЁГКИЙ УРОВЕНЬ — 20 вопросов (40% числа, 50% логика, 10% символы)
+    // ЛЁГКИЙ УРОВЕНЬ — 20 вопросов
     const easyQuestions = [
         // ЧИСЛА
         {
@@ -1145,6 +1128,8 @@
         }
     ];
 
+    // ---------------- СТЕЙТ И DOM ----------------
+
     let currentLevel = 'easy';
     let currentQuestions = easyQuestions;
 
@@ -1180,6 +1165,8 @@
     const resultText = document.getElementById('resultText');
     const restartBtn = document.getElementById('restartBtn');
 
+    // ---------------- ЛОКАЛЬНОЕ ХРАНИЛИЩЕ ----------------
+
     const LAST_RESULT_KEY = 'vk_iq_test_last_result';
     const ATTEMPTS_KEY = 'vk_iq_test_attempts';
     const EASY_COMPLETED_KEY = 'vk_iq_test_easy_completed';
@@ -1192,7 +1179,7 @@
             if (isNaN(n) || n < 0) return 0;
             return n;
         } catch (e) {
-            console.log('Load attempts error', e);
+            alert('Load attempts error: ' + e.message);
             return 0;
         }
     }
@@ -1201,7 +1188,7 @@
         try {
             localStorage.setItem(ATTEMPTS_KEY, String(n));
         } catch (e) {
-            console.log('Save attempts error', e);
+            alert('Save attempts error: ' + e.message);
         }
     }
 
@@ -1220,7 +1207,7 @@
                 '</strong> (' + data.percent + '%) — ' + data.label +
                 '.<br><span style="opacity:0.9;">Можно пройти ещё раз и посмотреть, изменится ли настроение и темп мышления.</span>';
         } catch (e) {
-            console.log('Load last result error', e);
+            alert('Load last result error: ' + e.message);
         }
     }
 
@@ -1229,7 +1216,7 @@
             const payload = { score, total, percent, label, level: currentLevel, ts: Date.now() };
             localStorage.setItem(LAST_RESULT_KEY, JSON.stringify(payload));
         } catch (e) {
-            console.log('Save last result error', e);
+            alert('Save last result error: ' + e.message);
         }
     }
 
@@ -1237,7 +1224,7 @@
         try {
             localStorage.setItem(EASY_COMPLETED_KEY, '1');
         } catch (e) {
-            console.log('Mark easy error', e);
+            alert('Mark easy error: ' + e.message);
         }
     }
 
@@ -1248,6 +1235,8 @@
             return false;
         }
     }
+
+    // ---------------- ЛОГИКА УРОВНЕЙ И ВОПРОСОВ ----------------
 
     function setLevel(level) {
         currentLevel = level;
@@ -1409,6 +1398,57 @@
         }
     });
 
+    // ---------------- VK BRIDGE + РЕКЛАМА С ДИАГНОСТИКОЙ ----------------
+
+    let vkBridgeReady = false;
+    let bannerEverTried = false;
+    let bannerShownOnce = false;
+    let rewardCheckInProgress = false;
+
+    if (window.vkBridge) {
+        vkBridge.send('VKWebAppInit')
+            .then(function () {
+                vkBridgeReady = true;
+                alert('VKWebAppInit: OK');
+                // Пробуем показать стартовый баннер один раз
+                showBannerWithAlerts('bottom', 'init');
+            })
+            .catch(function (error) {
+                alert('VKWebAppInit ERROR: ' + JSON.stringify(error));
+            });
+    } else {
+        alert('vkBridge не найден в окне. Приложение не запущено как VK Mini App?');
+    }
+
+    function showBannerWithAlerts(location, reason) {
+        if (!vkBridgeReady) {
+            alert('Баннер не вызван: vkBridge ещё не готов. Причина: ' + reason);
+            return;
+        }
+
+        if (bannerShownOnce) {
+            alert('Баннер уже успешно показывали раньше в этой сессии. Повторный показ не запрашиваем. Причина: ' + reason);
+            return;
+        }
+
+        bannerEverTried = true;
+
+        vkBridge.send('VKWebAppShowBannerAd', {
+            banner_location: location,
+            layout_type: 'resize',
+            can_close: true
+        }).then(function (data) {
+            alert('VKWebAppShowBannerAd SUCCESS (' + reason + '): ' + JSON.stringify(data));
+            if (data && data.result) {
+                bannerShownOnce = true;
+            } else {
+                alert('Ответ без result=true. Скорее всего, креатива нет или баннер не показан.');
+            }
+        }).catch(function (error) {
+            alert('VKWebAppShowBannerAd ERROR (' + reason + '): ' + JSON.stringify(error));
+        });
+    }
+
     restartBtn.addEventListener('click', () => {
         const attempts = loadAttempts();
 
@@ -1421,10 +1461,18 @@
             return;
         }
 
+        if (rewardCheckInProgress) {
+            alert('Ждём завершения предыдущего запроса рекламы.');
+            return;
+        }
+
+        rewardCheckInProgress = true;
+
         vkBridge.send('VKWebAppShowNativeAds', {
             ad_format: 'reward'
         }).then(function (data) {
-            console.log('Reward result', data);
+            rewardCheckInProgress = false;
+            alert('VKWebAppShowNativeAds (reward) RESULT: ' + JSON.stringify(data));
             if (data && data.result) {
                 currentIndex = 0;
                 answersState = new Array(currentQuestions.length).fill(null);
@@ -1432,23 +1480,17 @@
                 quizScreen.style.display = 'block';
                 renderQuestion();
             } else {
-                alert('Чтобы пройти тест ещё раз без ограничений, досмотрите рекламный ролик до конца.');
+                alert('Реклама не показана (result != true). Возможно, нет креативов для этого формата.');
             }
         }).catch(function (error) {
-            console.log('Reward error', error);
-            alert('Сейчас реклама недоступна. Попробуйте немного позже.');
+            rewardCheckInProgress = false;
+            alert('VKWebAppShowNativeAds ERROR: ' + JSON.stringify(error));
         });
     });
 
     startBtn.addEventListener('click', () => {
         if (vkBridgeReady && currentLevel !== 'easy' && isEasyCompleted()) {
-            vkBridge.send('VKWebAppShowBannerAd', {
-                banner_location: 'top'
-            }).then(function (data) {
-                console.log('Level change banner', data);
-            }).catch(function (error) {
-                console.log('Level change banner error', error);
-            });
+            showBannerWithAlerts('top', 'start_level_' + currentLevel);
         }
 
         welcomeScreen.style.display = 'none';
