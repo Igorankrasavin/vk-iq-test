@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy"
+          content="frame-ancestors https://vk.com https://*.vk.com;">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест логического мышления</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f172a, #020617);
+            color: #e5e7eb;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 480px;
+            padding: 16px;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.96);
+            border-radius: 16px;
+            padding: 20px 16px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+            color: #f9fafb;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            text-align: center;
+            color: #9ca3af;
+            margin-bottom: 14px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            background: rgba(37, 99, 235, 0.1);
+            color: #93c5fd;
+        }
+
+        .progress {
+            width: 100%;
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(30, 64, 175, 0.35);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .progress-inner {
+            height: 100%;
+            width: 0%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #60a5fa, #a855f7);
+            transition: width 0.2s ease-out;
+        }
+
+        .question-text {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 14px;
+            line-height: 1.4;
+            color: #e5e7eb;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 16px;
+        }
+
+        .answers {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .answer-btn {
+            width: 100%;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            padding: 10px 12px;
+            background: rgba(15, 23, 42, 0.9);
+            color: #e5e7eb;
+            font-size: 14px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease-out;
+        }
+
+        .answer-btn:hover {
+            border-color: #60a5fa;
+            background: rgba(30, 64, 175, 0.45);
+        }
+
+        .answer-btn.selected {
+            border-color: #a855f7;
+            background: rgba(88, 28, 135, 0.8);
+        }
+
+        .nav-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            border-radius: 999px;
+            padding: 10px 12px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.15s ease-out;
+        }
+
+        .nav-btn.primary {
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+            color: #022c22;
+        }
+
+        .nav-btn.primary:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .nav-btn.secondary {
+            background: rgba(15, 23, 42, 0.9);
+            color: #9ca3af;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+        }
+
+        .nav-btn.secondary:hover {
+            border-color: #e5e7eb;
+            color: #e5e7eb;
+        }
+
+        .result-title {
+            font-size: 18px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .result-score {
+            font-size: 32px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 4px;
+            background: linear-gradient(90deg, #60a5fa, #a855f7);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .result-label {
+            font-size: 14px;
+            text-align: center;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+
+        .result-text {
+            font-size: 13px;
+            color: #d1d5db;
+            line-height: 1.5;
+            margin-bottom: 14px;
+            text-align: left;
+        }
+
+        .note {
+            font-size: 11px;
+            color: #6b7280;
+            text-align: center;
+            margin-top: 6px;
+        }
+
+        .footer {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #6b7280;
+            text-align: center;
+        }
+
+        .footer a {
+            color: #93c5fd;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="card" id="quizScreen">
+        <div class="title">Тест логического мышления</div>
+        <div class="subtitle">10 коротких заданий на внимание, логику и простые закономерности.</div>
+
+        <div class="status-row">
+            <div id="questionCounter">Вопрос 1 из 10</div>
+            <div class="badge" id="tempBadge">Режим: разминка</div>
+        </div>
+
+        <div class="progress">
+            <div class="progress-inner" id="progressBar"></div>
+        </div>
+
+        <div class="question-text" id="questionText"></div>
+        <div class="hint" id="questionHint"></div>
+
+        <div class="answers" id="answersContainer"></div>
+
+        <div class="nav-row">
+            <button class="nav-btn secondary" id="prevBtn">Назад</button>
+            <button class="nav-btn primary" id="nextBtn" disabled>Дальше</button>
+        </div>
+
+        <div class="note">
+            Формат развлекательный, не является официальным измерением IQ.
+        </div>
+    </div>
+
+    <div class="card" id="resultScreen" style="display: none;">
+        <div class="result-title">Результат</div>
+        <div class="result-score" id="resultScore"></div>
+        <div class="result-label" id="resultLabel"></div>
+        <div class="result-text" id="resultText"></div>
+
+        <button class="nav-btn primary" id="restartBtn" style="margin-top: 6px;">
+            Пройти ещё раз
+        </button>
+
+        <div class="note">
+            Этот тест — тренажёр для мышления и игры с вниманием, а не медицинская или психометрическая диагностика.
+        </div>
+    </div>
+
+    <div class="footer">
+        Основа для VK Mini Apps. Можно встроить рекламу и премиум-режим по аналогии с «Календарь Цзы-У Su-Jok».
+    </div>
+</div>
+
+<script>
+    // Массив вопросов: text, hint, answers[], correctIndex
+    const questions = [
+        {
+            text: "Какое число продолжит ряд: 2, 4, 8, 16, ... ?",
+            hint: "Каждый следующий элемент связан с предыдущим.",
+            answers: ["18", "24", "32", "30"],
+            correctIndex: 2
+        },
+        {
+            text: "Все вороны чёрные. На дереве сидит птица, и она не чёрная. Можно ли точно сказать, что это не ворона?",
+            hint: "Подумаем про «все» и «одна».",
+            answers: ["Да, точно не ворона", "Нет, нельзя быть уверенным", "Это точно ворона", "Тут не хватает данных"],
+            correctIndex: 1
+        },
+        {
+            text: "Какое число лишнее в последовательности: 7, 14, 21, 28, 36, 42?",
+            hint: "Посмотри на шаг между числами.",
+            answers: ["14", "28", "36", "42"],
+            correctIndex: 2
+        },
+        {
+            text: "У Пети три сестры. У каждой сестры один брат. Сколько всего детей в семье?",
+            hint: "Сёстры делят одного и того же брата.",
+            answers: ["4", "5", "6", "7"],
+            correctIndex: 1
+        },
+        {
+            text: "Какое слово получится, если буквы С, Л, О, Н расположить в алфавитном порядке?",
+            hint: "А, Б, В... Расположи по порядку.",
+            answers: ["ЛОСН", "НОЛС", "ЛСНО", "ЛНОС"],
+            correctIndex: 3
+        },
+        {
+            text: "Квадратное поле разбито на 16 маленьких квадратов. Сколько маленьких квадратов по одной стороне?",
+            hint: "16 = ? × ?",
+            answers: ["3", "4", "5", "8"],
+            correctIndex: 1
+        },
+        {
+            text: "Если сегодня среда, то какой день недели будет через 9 дней?",
+            hint: "Через 7 дней возвращаемся в тот же день.",
+            answers: ["Пятница", "Суббота", "Понедельник", "Пятница через неделю"],
+            correctIndex: 0
+        },
+        {
+            text: "Часовая стрелка прошла от 3 до 9. На какой угол (в градусах) она повернулась?",
+            hint: "Полный круг — 360°. Часов — 12.",
+            answers: ["90°", "120°", "150°", "180°"],
+            correctIndex: 3
+        },
+        {
+            text: "Условие: все A — B. Некоторые B — C. Можно ли точно сказать, что некоторые A — C?",
+            hint: "Попробуй представить круги пересечений.",
+            answers: ["Да, всегда", "Нет, не обязательно", "Да, если B мало", "Да, если C много"],
+            correctIndex: 1
+        },
+        {
+            text: "Сколько различных перестановок букв в слове КИТ?",
+            hint: "Три буквы, все разные.",
+            answers: ["3", "4", "5", "6"],
+            correctIndex: 3
+        }
+    ];
+
+    let currentIndex = 0;
+    let answersState = new Array(questions.length).fill(null); // индекс выбранного варианта
+    const quizScreen = document.getElementById('quizScreen');
+    const resultScreen = document.getElementById('resultScreen');
+
+    const questionCounter = document.getElementById('questionCounter');
+    const progressBar = document.getElementById('progressBar');
+    const questionText = document.getElementById('questionText');
+    const questionHint = document.getElementById('questionHint');
+    const answersContainer = document.getElementById('answersContainer');
+
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const tempBadge = document.getElementById('tempBadge');
+
+    const resultScore = document.getElementById('resultScore');
+    const resultLabel = document.getElementById('resultLabel');
+    const resultText = document.getElementById('resultText');
+    const restartBtn = document.getElementById('restartBtn');
+
+    function renderQuestion() {
+        const q = questions[currentIndex];
+
+        questionCounter.textContent = `Вопрос ${currentIndex + 1} из ${questions.length}`;
+        progressBar.style.width = ((currentIndex) / questions.length * 100) + '%';
+
+        questionText.textContent = q.text;
+        questionHint.textContent = q.hint;
+
+        answersContainer.innerHTML = '';
+        q.answers.forEach((ans, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'answer-btn';
+            btn.textContent = ans;
+
+            if (answersState[currentIndex] === idx) {
+                btn.classList.add('selected');
+            }
+
+            btn.addEventListener('click', () => {
+                answersState[currentIndex] = idx;
+                renderQuestion();
+                updateNextButtonState();
+            });
+
+            answersContainer.appendChild(btn);
+        });
+
+        prevBtn.disabled = currentIndex === 0;
+        updateNextButtonState();
+
+        // легкий намёк на «нагрев» теста
+        if (currentIndex < 3) {
+            tempBadge.textContent = 'Режим: разминка';
+        } else if (currentIndex < 7) {
+            tempBadge.textContent = 'Режим: основная часть';
+        } else {
+            tempBadge.textContent = 'Режим: финишный рывок';
+        }
+    }
+
+    function updateNextButtonState() {
+        const hasAnswer = answersState[currentIndex] !== null;
+        if (currentIndex === questions.length - 1) {
+            nextBtn.textContent = 'Показать результат';
+        } else {
+            nextBtn.textContent = 'Дальше';
+        }
+        nextBtn.disabled = !hasAnswer;
+    }
+
+    function calculateScore() {
+        let correctCount = 0;
+        questions.forEach((q, idx) => {
+            if (answersState[idx] === q.correctIndex) {
+                correctCount++;
+            }
+        });
+        return correctCount;
+    }
+
+    function getResultDescription(score) {
+        const total = questions.length;
+        const percent = Math.round(score / total * 100);
+
+        let label;
+        let text;
+
+        if (percent <= 40) {
+            label = "Наблюдатель в разминке";
+            text = "Ты уже делаешь важное — обращаешь внимание на свои мысли и реакции. Мозг отлично тренируется маленькими шагами. Можно пройти тест ещё раз позже и посмотреть, как меняется результат.";
+        } else if (percent <= 70) {
+            label = "Внимательный аналитик";
+            text = "У тебя хорошо развита базовая логика и умение замечать закономерности. Если добавить немного терпения к условиям задач, результат может стать ещё выше.";
+        } else {
+            label = "Интуитивный стратег";
+            text = "Ты быстро ориентируешься в логических задачах и любишь искать структуру в хаосе. Этот тест — только малая часть того, что умеет твой мозг. Главное — применять это в реальной жизни, а не только в головоломках.";
+        }
+
+        return { percent, label, text };
+    }
+
+    prevBtn.addEventListener('click', () => {
+        if (currentIndex > 0) {
+            currentIndex--;
+            renderQuestion();
+        }
+    });
+
+    nextBtn.addEventListener('click', () => {
+        if (currentIndex < questions.length - 1) {
+            currentIndex++;
+            renderQuestion();
+        } else {
+            // показываем результат
+            const score = calculateScore();
+            const total = questions.length;
+            const { percent, label, text } = getResultDescription(score);
+
+            resultScore.textContent = `${score} / ${total}`;
+            resultLabel.textContent = `${label} (${percent}%)`;
+            resultText.textContent = text;
+
+            progressBar.style.width = '100%';
+
+            quizScreen.style.display = 'none';
+            resultScreen.style.display = 'block';
+        }
+    });
+
+    restartBtn.addEventListener('click', () => {
+        currentIndex = 0;
+        answersState = new Array(questions.length).fill(null);
+        resultScreen.style.display = 'none';
+        quizScreen.style.display = 'block';
+        renderQuestion();
+    });
+
+    // старт
+    renderQuestion();
+</script>
+</body>
+</html>
