@@ -220,11 +220,82 @@
             color: #93c5fd;
             text-decoration: none;
         }
+
+        /* Экран приветствия */
+        .welcome-title {
+            font-size: 21px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .welcome-text {
+            font-size: 13px;
+            color: #d1d5db;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .last-result-box {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .last-result-box strong {
+            color: #e5e7eb;
+        }
+
+        .ad-strip {
+            margin-top: 12px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px dashed rgba(148, 163, 184, 0.5);
+            font-size: 11px;
+            color: #9ca3af;
+            text-align: center;
+        }
     </style>
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
 </head>
 <body>
 <div class="app">
-    <div class="card" id="quizScreen">
+    <!-- Экран приветствия -->
+    <div class="card" id="welcomeScreen">
+        <div class="welcome-title">Тест логического мышления</div>
+        <div class="subtitle">Небольшой тренажёр внимания и логики. 10 вопросов, примерно 3–5 минут.</div>
+
+        <div class="welcome-text">
+            Это не «официальный IQ», а лёгкая разминка для мышления: простые задачи на числа,
+            закономерности и базовую логику.
+        </div>
+        <div class="welcome-text">
+            После прохождения теста результат сохранится на этом устройстве, чтобы ты мог(ла) сравнить
+            себя «сегодня» и «в другой день».
+        </div>
+
+        <div id="lastResultBox" class="last-result-box" style="display: none;"></div>
+
+        <button class="nav-btn primary" id="startBtn" style="margin-top: 12px;">
+            Начать тест
+        </button>
+
+        <div class="note" style="margin-top: 10px;">
+            Формат развлекательный, без привязки к каким‑либо сообществам и темам.
+        </div>
+        <div class="ad-strip">
+            В приложении может отображаться реклама ВКонтакте. Мы используем её, чтобы тест оставался бесплатным.
+        </div>
+    </div>
+
+    <!-- Экран теста -->
+    <div class="card" id="quizScreen" style="display: none;">
         <div class="title">Тест логического мышления</div>
         <div class="subtitle">10 коротких заданий на внимание, логику и простые закономерности.</div>
 
@@ -252,6 +323,7 @@
         </div>
     </div>
 
+    <!-- Экран результата -->
     <div class="card" id="resultScreen" style="display: none;">
         <div class="result-title">Результат</div>
         <div class="result-score" id="resultScore"></div>
@@ -268,12 +340,33 @@
     </div>
 
     <div class="footer">
-        Основа для VK Mini Apps. Можно встроить рекламу и премиум-режим по аналогии с «Календарь Цзы-У Su-Jok».
+        Независимое мини-приложение VK Mini Apps. Без привязки к сообществам и сторонним темам.
     </div>
 </div>
 
 <script>
-    // Массив вопросов: text, hint, answers[], correctIndex
+    // Инициализация VK Bridge и баннера
+    let vkBridgeReady = false;
+
+    if (window.vkBridge) {
+        vkBridge.send('VKWebAppInit')
+            .then(function () {
+                vkBridgeReady = true;
+                // Пытаемся показать баннер внизу, если доступен
+                vkBridge.send('VKWebAppShowBannerAd', {
+                    banner_location: 'bottom'
+                }).then(function (data) {
+                    console.log('Banner result', data);
+                }).catch(function (error) {
+                    console.log('Banner error', error);
+                });
+            })
+            .catch(function (error) {
+                console.log('VKWebAppInit error', error);
+            });
+    }
+
+    // Массив вопросов
     const questions = [
         {
             text: "Какое число продолжит ряд: 2, 4, 8, 16, ... ?",
@@ -338,7 +431,12 @@
     ];
 
     let currentIndex = 0;
-    let answersState = new Array(questions.length).fill(null); // индекс выбранного варианта
+    let answersState = new Array(questions.length).fill(null);
+
+    const welcomeScreen = document.getElementById('welcomeScreen');
+    const lastResultBox = document.getElementById('lastResultBox');
+    const startBtn = document.getElementById('startBtn');
+
     const quizScreen = document.getElementById('quizScreen');
     const resultScreen = document.getElementById('resultScreen');
 
@@ -356,6 +454,36 @@
     const resultLabel = document.getElementById('resultLabel');
     const resultText = document.getElementById('resultText');
     const restartBtn = document.getElementById('restartBtn');
+
+    const LAST_RESULT_KEY = 'vk_iq_test_last_result';
+
+    function loadLastResult() {
+        try {
+            const raw = localStorage.getItem(LAST_RESULT_KEY);
+            if (!raw) return;
+
+            const data = JSON.parse(raw);
+            if (!data || typeof data.percent !== 'number') return;
+
+            lastResultBox.style.display = 'block';
+            lastResultBox.innerHTML =
+                'Последний результат на этом устройстве: <strong>' +
+                data.score + ' / ' + data.total +
+                '</strong> (' + data.percent + '%) — ' + data.label +
+                '.<br><span style="opacity:0.9;">Можно пройти ещё раз и посмотреть, изменится ли настроение и темп мышления.</span>';
+        } catch (e) {
+            console.log('Load last result error', e);
+        }
+    }
+
+    function saveLastResult(score, total, percent, label) {
+        try {
+            const payload = { score, total, percent, label, ts: Date.now() };
+            localStorage.setItem(LAST_RESULT_KEY, JSON.stringify(payload));
+        } catch (e) {
+            console.log('Save last result error', e);
+        }
+    }
 
     function renderQuestion() {
         const q = questions[currentIndex];
@@ -388,7 +516,6 @@
         prevBtn.disabled = currentIndex === 0;
         updateNextButtonState();
 
-        // легкий намёк на «нагрев» теста
         if (currentIndex < 3) {
             tempBadge.textContent = 'Режим: разминка';
         } else if (currentIndex < 7) {
@@ -439,6 +566,7 @@
         return { percent, label, text };
     }
 
+    // Навигация
     prevBtn.addEventListener('click', () => {
         if (currentIndex > 0) {
             currentIndex--;
@@ -451,7 +579,6 @@
             currentIndex++;
             renderQuestion();
         } else {
-            // показываем результат
             const score = calculateScore();
             const total = questions.length;
             const { percent, label, text } = getResultDescription(score);
@@ -461,6 +588,9 @@
             resultText.textContent = text;
 
             progressBar.style.width = '100%';
+
+            // Сохраняем результат в localStorage
+            saveLastResult(score, total, percent, label);
 
             quizScreen.style.display = 'none';
             resultScreen.style.display = 'block';
@@ -475,8 +605,17 @@
         renderQuestion();
     });
 
-    // старт
-    renderQuestion();
+    // Старт: экран приветствия
+    startBtn.addEventListener('click', () => {
+        welcomeScreen.style.display = 'none';
+        quizScreen.style.display = 'block';
+        currentIndex = 0;
+        answersState = new Array(questions.length).fill(null);
+        renderQuestion();
+    });
+
+    // При загрузке страницы пытаемся показать последний результат
+    loadLastResult();
 </script>
 </body>
 </html>
